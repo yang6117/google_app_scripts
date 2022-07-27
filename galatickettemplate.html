@@ -1,0 +1,73 @@
+function onlineTickets() {
+    //var sheetSrc = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DAY BEFORE PREREG $15/$25 (201 - 882)");
+    var sheetSrc = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DAY OF PREREG $20/$30 (883 - 1000)");
+    var startRow = 1;  // Row above first row of data to process
+    var data = sheetSrc.getDataRange().getValues();
+  
+    for (var i = 0 + startRow; i < 701 + startRow; ++i) {
+      var row = data[41];
+      var row = data[i];
+      var hasPayed = row[2];
+      var name = row[4];
+      var pickedUp = row[10]; 
+      var physorOnline = row[8];
+      var tixhasbeenSent = row[9];
+      var emailAddress = row[15];
+      var body = getEmailText(row);
+      var htmlBody = getEmailHtml(row);
+  
+      if(emailAddress == 0){
+        break;
+      }
+  
+      if(hasPayed && (!tixhasbeenSent) && (physorOnline == 'ONLINE')){ // only happens if cols i is false, if they want an online tix, and if they have payed
+        //Logger.log('email address of payer who has chosen online is' + emailAddress);
+      //if((hasPayed == true) && (pickedUp == false)){
+        var message = 'Hello '+ name +',\n\n\n' // the actual message
+        + hasPayed + '\n\n'
+        + name + '\n\n' // or else     
+        + physorOnline + '\n\n'  
+        + tixhasbeenSent + '\n\n'
+        + emailAddress + '\n\n'
+        + '\n\n'
+        Logger.log(message);
+        Logger.log(body);
+        
+        MailApp.sendEmail({
+          to: emailAddress,
+          subject: "ASU GALA 2022 - Digital Ticket Attached",
+          body: body,
+          htmlBody: htmlBody,
+        });
+        
+        // BOTTOM LINES SET THE TIXSENT AS TRUE
+        var cell = sheetSrc.getRange(i+1,10); // i is rows, 9 is cols
+        cell.setValue(true);
+      }
+  
+      /*
+      MailApp.sendEmail({
+        to: "yang6117@umn.edu",
+        subject: "ASU GALA 2022 - Digital Ticket Attached",
+        body: body,
+        htmlBody: htmlBody,
+      });
+      */
+    }
+  }
+  
+  function getEmailText(row) { // gives uh the tixnum and tixcode
+    var text = "";
+    var tixNum = row[3];
+    var name = row[4];
+    var tixCode = row[5];
+    text = text + name + "\n" + tixNum + "\n" + tixCode + "\n" + tixNum + "\n" + tixCode + "\n";
+    return text;
+  }
+  
+  function getEmailHtml(row) { // somehow gives us the actual html thingy
+    var htmlTemplate = HtmlService.createTemplateFromFile("templateonlinegalatixvenmo.html");
+    htmlTemplate.row = row;
+    var htmlBody = htmlTemplate.evaluate().getContent();
+    return htmlBody;
+  }
